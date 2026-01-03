@@ -6,25 +6,21 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Create a custom config
+# Use the default (Akshare-based) configuration and optionally tweak LLM params
 config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-4o-mini"  # Use a different model
-config["quick_think_llm"] = "gpt-4o-mini"  # Use a different model
-config["max_debate_rounds"] = 1  # Increase debate rounds
+config["deep_think_llm"] = "deepseek-chat"
+config["quick_think_llm"] = "deepseek-chat"
+config["max_debate_rounds"] = 1
 
-# Configure data vendors (default uses yfinance and alpha_vantage)
-config["data_vendors"] = {
-    "core_stock_apis": "yfinance",           # Options: yfinance, alpha_vantage, local
-    "technical_indicators": "yfinance",      # Options: yfinance, alpha_vantage, local
-    "fundamental_data": "alpha_vantage",     # Options: openai, alpha_vantage, local
-    "news_data": "alpha_vantage",            # Options: openai, alpha_vantage, google, local
-}
+# Example: run the pipeline on a mainland A-share ticker (Moutai)
+example_ticker = "600519"
+analysis_date = "2025-12-17"
 
-# Initialize with custom config
+# Initialize with the Akshare config
 ta = TradingAgentsGraph(debug=True, config=config)
 
-# forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
+# Forward propagate through the graph
+_, decision = ta.propagate(example_ticker, analysis_date)
 print(decision)
 
 # Memorize mistakes and reflect

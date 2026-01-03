@@ -8,26 +8,54 @@ DEFAULT_CONFIG = {
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
         "dataflows/data_cache",
     ),
-    # LLM settings
-    "llm_provider": "openai",
-    "deep_think_llm": "o4-mini",
-    "quick_think_llm": "gpt-4o-mini",
-    "backend_url": "https://api.openai.com/v1",
-    # Debate and discussion settings
+    # Global fallback toggle (per-category overrides available via fallback_config)
+    "enable_vendor_fallback": True,
+    "fallback_config": {
+        # 基本面仍优先 Akshare，但当接口异常时允许回退，避免流程直接中断
+        "fundamental_data": True,
+        # Akshare 某些日期可能没有新闻，允许回退避免直接报错
+        "news_data": True,
+    },
+
+    # =========================
+    # LLM settings (DeepSeek)
+    # =========================
+    "llm_provider": "deepseek",
+
+    # 深度推理模型（用于风险讨论 / 决策辩论）
+    "deep_think_llm": "deepseek-chat",
+
+    # 快速模型（用于普通 agent response）
+    "quick_think_llm": "deepseek-chat",
+
+    "backend_url": "https://api.deepseek.com/v1",
+
+    # =========================
+    # Debate and discussion
+    # =========================
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,
     "max_recur_limit": 100,
+
+    # =========================
     # Data vendor configuration
-    # Category-level configuration (default for all tools in category)
+    # =========================
     "data_vendors": {
-        "core_stock_apis": "yfinance",       # Options: yfinance, alpha_vantage, local
-        "technical_indicators": "yfinance",  # Options: yfinance, alpha_vantage, local
-        "fundamental_data": "alpha_vantage", # Options: openai, alpha_vantage, local
-        "news_data": "alpha_vantage",        # Options: openai, alpha_vantage, google, local
+        "core_stock_apis": "akshare",
+        "technical_indicators": "akshare",
+        "fundamental_data": "akshare",
+        "news_data": "akshare",
     },
-    # Tool-level configuration (takes precedence over category-level)
+
     "tool_vendors": {
-        # Example: "get_stock_data": "alpha_vantage",  # Override category default
-        # Example: "get_news": "openai",               # Override category default
+        # 可留空
     },
+
+    # =========================
+    # Language / localization
+    # =========================
+    "language_instruction": os.getenv(
+        "TRADINGAGENTS_LANGUAGE_INSTRUCTION",
+        "请使用简体中文撰写所有分析、讨论和最终报告，并在必要时保留关键金融术语的英文简称。",
+    ),
 }

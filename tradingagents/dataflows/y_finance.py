@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import yfinance as yf
 import os
-from .stockstats_utils import StockstatsUtils
+from .stockstats_utils import StockstatsUtils, load_indicator_history
 
 def get_YFin_data_online(
     symbol: Annotated[str, "ticker symbol of the company"],
@@ -197,13 +197,12 @@ def _get_stock_stats_bulk(
     from .config import get_config
     import pandas as pd
     from stockstats import wrap
-    import os
     
     config = get_config()
-    online = config["data_vendors"]["technical_indicators"] != "local"
+    vendor = config["data_vendors"].get("technical_indicators", "yfinance")
+    online = vendor != "local"
     
     if not online:
-        # Local data path
         try:
             data = pd.read_csv(
                 os.path.join(
@@ -215,37 +214,12 @@ def _get_stock_stats_bulk(
         except FileNotFoundError:
             raise Exception("Stockstats fail: Yahoo Finance data not fetched yet!")
     else:
-        # Online data fetching with caching
         today_date = pd.Timestamp.today()
-        curr_date_dt = pd.to_datetime(curr_date)
         
-        end_date = today_date
-        start_date = today_date - pd.DateOffset(years=15)
-        start_date_str = start_date.strftime("%Y-%m-%d")
-        end_date_str = end_date.strftime("%Y-%m-%d")
+        end_date = today_date.strftime("%Y-%m-%d")
+        start_date = (today_date - pd.DateOffset(years=15)).strftime("%Y-%m-%d")
         
-        os.makedirs(config["data_cache_dir"], exist_ok=True)
-        
-        data_file = os.path.join(
-            config["data_cache_dir"],
-            f"{symbol}-YFin-data-{start_date_str}-{end_date_str}.csv",
-        )
-        
-        if os.path.exists(data_file):
-            data = pd.read_csv(data_file)
-            data["Date"] = pd.to_datetime(data["Date"])
-        else:
-            data = yf.download(
-                symbol,
-                start=start_date_str,
-                end=end_date_str,
-                multi_level_index=False,
-                progress=False,
-                auto_adjust=True,
-            )
-            data = data.reset_index()
-            data.to_csv(data_file, index=False)
-        
+        data = load_indicator_history(symbol, vendor, config, start_date, end_date)
         df = wrap(data)
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
     

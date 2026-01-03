@@ -13,9 +13,19 @@ from .alpha_vantage import (
     get_cashflow as get_alpha_vantage_cashflow,
     get_income_statement as get_alpha_vantage_income_statement,
     get_insider_transactions as get_alpha_vantage_insider_transactions,
-    get_news as get_alpha_vantage_news
+    get_news as get_alpha_vantage_news,
+    get_global_news as get_alpha_vantage_global_news,
 )
 from .alpha_vantage_common import AlphaVantageRateLimitError
+from .akshare_data import (
+    get_stock as get_akshare_stock,
+    get_fundamentals as get_akshare_fundamentals,
+    get_balance_sheet as get_akshare_balance_sheet,
+    get_cashflow as get_akshare_cashflow,
+    get_income_statement as get_akshare_income_statement,
+    get_news as get_akshare_news,
+    get_global_news as get_akshare_global_news,
+)
 
 # Configuration and routing logic
 from .config import get_config
@@ -58,7 +68,8 @@ VENDOR_LIST = [
     "local",
     "yfinance",
     "openai",
-    "google"
+    "google",
+    "akshare",
 ]
 
 # Mapping of methods to their vendor-specific implementations
@@ -67,42 +78,51 @@ VENDOR_METHODS = {
     "get_stock_data": {
         "alpha_vantage": get_alpha_vantage_stock,
         "yfinance": get_YFin_data_online,
+        "akshare": get_akshare_stock,
         "local": get_YFin_data,
     },
     # technical_indicators
     "get_indicators": {
         "alpha_vantage": get_alpha_vantage_indicator,
         "yfinance": get_stock_stats_indicators_window,
+        "akshare": get_stock_stats_indicators_window,
         "local": get_stock_stats_indicators_window
     },
     # fundamental_data
     "get_fundamentals": {
         "alpha_vantage": get_alpha_vantage_fundamentals,
+        "akshare": get_akshare_fundamentals,
         "openai": get_fundamentals_openai,
     },
     "get_balance_sheet": {
         "alpha_vantage": get_alpha_vantage_balance_sheet,
         "yfinance": get_yfinance_balance_sheet,
+        "akshare": get_akshare_balance_sheet,
         "local": get_simfin_balance_sheet,
     },
     "get_cashflow": {
         "alpha_vantage": get_alpha_vantage_cashflow,
         "yfinance": get_yfinance_cashflow,
+        "akshare": get_akshare_cashflow,
         "local": get_simfin_cashflow,
     },
     "get_income_statement": {
         "alpha_vantage": get_alpha_vantage_income_statement,
         "yfinance": get_yfinance_income_statement,
+        "akshare": get_akshare_income_statement,
         "local": get_simfin_income_statements,
     },
     # news_data
     "get_news": {
+        "akshare": get_akshare_news,
         "alpha_vantage": get_alpha_vantage_news,
         "openai": get_stock_news_openai,
         "google": get_google_news,
         "local": [get_finnhub_news, get_reddit_company_news, get_google_news],
     },
     "get_global_news": {
+        "akshare": get_akshare_global_news,
+        "alpha_vantage": get_alpha_vantage_global_news,
         "openai": get_global_news_openai,
         "local": get_reddit_global_news
     },
@@ -142,6 +162,15 @@ def route_to_vendor(method: str, *args, **kwargs):
     """Route method calls to appropriate vendor implementation with fallback support."""
     category = get_category_for_method(method)
     vendor_config = get_vendor(category, method)
+    config = get_config()
+    enable_fallback = config.get("enable_vendor_fallback", True)
+
+    fallback_config = config.get("fallback_config", {})
+    # Method-level override first, then category-level
+    if method in fallback_config:
+        enable_fallback = fallback_config[method]
+    elif category in fallback_config:
+        enable_fallback = fallback_config[category]
 
     # Handle comma-separated vendors
     primary_vendors = [v.strip() for v in vendor_config.split(',')]
@@ -151,12 +180,14 @@ def route_to_vendor(method: str, *args, **kwargs):
 
     # Get all available vendors for this method for fallback
     all_available_vendors = list(VENDOR_METHODS[method].keys())
-    
-    # Create fallback vendor list: primary vendors first, then remaining vendors as fallbacks
-    fallback_vendors = primary_vendors.copy()
-    for vendor in all_available_vendors:
-        if vendor not in fallback_vendors:
-            fallback_vendors.append(vendor)
+
+    if enable_fallback:
+        fallback_vendors = primary_vendors.copy()
+        for vendor in all_available_vendors:
+            if vendor not in fallback_vendors:
+                fallback_vendors.append(vendor)
+    else:
+        fallback_vendors = primary_vendors.copy()
 
     # Debug: Print fallback ordering
     primary_str = " → ".join(primary_vendors)

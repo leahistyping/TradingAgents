@@ -9,6 +9,7 @@ ANALYST_ORDER = [
     ("News Analyst", AnalystType.NEWS),
     ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
 ]
+DEFAULT_ANALYST_SELECTION = {AnalystType.MARKET, AnalystType.FUNDAMENTALS}
 
 
 def get_ticker() -> str:
@@ -69,7 +70,12 @@ def select_analysts() -> List[AnalystType]:
     choices = questionary.checkbox(
         "Select Your [Analysts Team]:",
         choices=[
-            questionary.Choice(display, value=value) for display, value in ANALYST_ORDER
+            questionary.Choice(
+                display,
+                value=value,
+                checked=value in DEFAULT_ANALYST_SELECTION,
+            )
+            for display, value in ANALYST_ORDER
         ],
         instruction="\n- Press Space to select/unselect analysts\n- Press 'a' to select/unselect all\n- Press Enter when done",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
@@ -152,7 +158,10 @@ def select_shallow_thinking_agent(provider) -> str:
         "ollama": [
             ("llama3.1 local", "llama3.1"),
             ("llama3.2 local", "llama3.2"),
-        ]
+        ],
+        "deepseek": [
+            ("DeepSeek Chat - 通用对话模型 (DeepSeek-V3.2 非思考模式)", "deepseek-chat"),
+        ],
     }
 
     choice = questionary.select(
@@ -214,7 +223,11 @@ def select_deep_thinking_agent(provider) -> str:
         "ollama": [
             ("llama3.1 local", "llama3.1"),
             ("qwen3", "qwen3"),
-        ]
+        ],
+        "deepseek": [
+            ("DeepSeek Reasoner - 强化推理与链式思考 (DeepSeek-V3.2 思考模式)", "deepseek-reasoner"),
+            ("DeepSeek Chat - 当需要低成本深度对话时可选", "deepseek-chat"),
+        ],
     }
     
     choice = questionary.select(
@@ -247,7 +260,8 @@ def select_llm_provider() -> tuple[str, str]:
         ("Anthropic", "https://api.anthropic.com/"),
         ("Google", "https://generativelanguage.googleapis.com/v1"),
         ("Openrouter", "https://openrouter.ai/api/v1"),
-        ("Ollama", "http://localhost:11434/v1"),        
+        ("DeepSeek", "https://api.deepseek.com/v1"),
+        ("Ollama", "http://localhost:11434/v1"),
     ]
     
     choice = questionary.select(
@@ -267,7 +281,7 @@ def select_llm_provider() -> tuple[str, str]:
     ).ask()
     
     if choice is None:
-        console.print("\n[red]no OpenAI backend selected. Exiting...[/red]")
+        console.print("\n[red]No LLM backend selected. Exiting...[/red]")
         exit(1)
     
     display_name, url = choice

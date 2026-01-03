@@ -48,7 +48,7 @@ class TradingAgentsGraph:
 
     def __init__(
         self,
-        selected_analysts=["market", "social", "news", "fundamentals"],
+        selected_analysts=["market", "fundamentals"],
         debug=False,
         config: Dict[str, Any] = None,
     ):
@@ -72,18 +72,54 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
-        if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
-            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "anthropic":
-            self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "google":
-            self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
-            self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
+        provider = self.config["llm_provider"].lower()
+        if provider in ["openai", "openrouter", "ollama", "deepseek"]:
+            api_key = (
+                os.getenv("DEEPSEEK_API_KEY")
+                if provider == "deepseek"
+                else os.getenv("OPENAI_API_KEY")
+            )
+
+            if not api_key:
+                raise RuntimeError(
+                    f"API key not found for provider={provider}. "
+                    f"Please set DEEPSEEK_API_KEY or OPENAI_API_KEY."
+                )
+
+            self.deep_thinking_llm = ChatOpenAI(
+                model=self.config["deep_think_llm"],
+                base_url=self.config["backend_url"],
+                api_key=api_key,
+            )
+
+            self.quick_thinking_llm = ChatOpenAI(
+                model=self.config["quick_think_llm"],
+                base_url=self.config["backend_url"],
+                api_key=api_key,
+            )
+
+
+        elif provider == "anthropic":
+            self.deep_thinking_llm = ChatAnthropic(
+                model=self.config["deep_think_llm"],
+                base_url=self.config["backend_url"]
+            )
+            self.quick_thinking_llm = ChatAnthropic(
+                model=self.config["quick_think_llm"],
+                base_url=self.config["backend_url"]
+            )
+
+        elif provider == "google":
+            self.deep_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["deep_think_llm"]
+            )
+            self.quick_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["quick_think_llm"]
+            )
+
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
-        
+
         # Initialize memories
         self.bull_memory = FinancialSituationMemory("bull_memory", self.config)
         self.bear_memory = FinancialSituationMemory("bear_memory", self.config)
@@ -141,7 +177,7 @@ class TradingAgentsGraph:
                 [
                     # News and insider information
                     get_news,
-                    get_global_news,
+                    #get_global_news,
                     get_insider_sentiment,
                     get_insider_transactions,
                 ]
