@@ -1,31 +1,7 @@
-<div align="center">
-  <img src="assets/TauricResearch.png" style="width: 60%; height: auto;" />
-</div>
 
-<div align="center" style="line-height: 1.2;">
-  <a href="https://arxiv.org/abs/2412.20138" target="_blank"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2412.20138-B31B1B?logo=arxiv"/></a>
-  <a href="https://discord.com/invite/hk9PGKShPK" target="_blank"><img alt="Discord" src="https://img.shields.io/badge/Discord-TradingResearch-7289da?logo=discord&logoColor=white&color=7289da"/></a>
-  <a href="./assets/wechat.png" target="_blank"><img alt="WeChat" src="https://img.shields.io/badge/WeChat-TauricResearch-brightgreen?logo=wechat&logoColor=white"/></a>
-  <a href="https://x.com/TauricResearch" target="_blank"><img alt="X Follow" src="https://img.shields.io/badge/X-TauricResearch-white?logo=x&logoColor=white"/></a>
-</div>
-
----
 
 # TradingAgents：多智能体 LLM 量化研究平台
 
-> 🎉 TradingAgents 全面开源！感谢社区的长期关注，我们将持续迭代，共建智能投研的新范式。
-
-## 平台亮点与创新点
-
-| 创新维度 | 说明 |
-| --- | --- |
-| **多智能体协同链路** | 分离“分析－研究－交易－风控”四条链路，所有智能体基于 LangGraph 互相质询，自动形成“观点 → 争辩 → 决策”闭环。 |
-| **A 股原生支持** | 默认启用 Akshare 数据管线（东财 / 腾讯 / 财新多源），自动 fallback 至 Alpha Vantage / OpenAI，既保证国内行情实时性，也保证海外用户可复现。 |
-| **可交互 CLI 战情室** | 内置 Rich Live UI + 纯文本模式，自带流程追踪、工具调用日志与决策面板，适合高频调参与教学演示。 |
-| **可插拔模型策略** | 同时兼容 DeepSeek、OpenAI 与其它兼容 OpenAI API 的大模型，可针对“慢思考/快思考”分别定制模型、温度与记忆策略。 |
-| **投研资产双向适配** | 提供 `TradingAgentsGraph` Python API，既能驱动实盘研究，也能嵌入回测框架，实现“LLM 研究 + 传统量化”混合策略。 |
-
----
 
 ## 内容索引
 
@@ -133,36 +109,3 @@ print(decision)
 - 工具扩展：在 `tradingagents/dataflows` 中添加自定义工具，然后注册到 `route_to_vendor`
 
 ---
-
-## 贡献指南
-
-1. Fork + 创建新分支  
-2. 提交前运行基础检查：`ruff check`、`pytest -q`  
-3. PR 请附上修改说明（尤其是新增工具 / LLM 适配）  
-4. 欢迎贡献以下方向：
-   - 更多本地化数据源（港股、期货等）
-   - 记忆与检索增强（RAG、Agentic Memory）
-   - 多语言报告模板 / Prompt
-   - CLI 与 Web 可视化
-
-如有合作意向或想加入社区，可通过 Discord / 微信群联系我们。
-
----
-
-## 引用
-
-```
-@misc{xiao2025tradingagentsmultiagentsllmfinancial,
-      title={TradingAgents: Multi-Agents LLM Financial Trading Framework}, 
-      author={Yijia Xiao and Edward Sun and Di Luo and Wei Wang},
-      year={2025},
-      eprint={2412.20138},
-      archivePrefix={arXiv},
-      primaryClass={q-fin.TR},
-      url={https://arxiv.org/abs/2412.20138}, 
-}
-```
-
----
-
-**TradingAgents** 将持续深耕“LLM + 投研”场景，期待与你一起构建下一代智能投研工作站。欢迎 Star 🌟、Issue 与 PR！  
